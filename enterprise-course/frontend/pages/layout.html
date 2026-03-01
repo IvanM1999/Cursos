@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}} - Enterprise Course</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="/" class="logo"><span>Enterprise Course</span></a>
+                </div>
+
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog">Blogs</a></li>
+                    <li><a href="/dictionary">Dicionário</a></li>
+                    <li><a href="/docs">Documentação</a></li>
+                    
+                    {{#if isAuthenticated}}
+                        <li class="nav-divider"></li>
+                        <li><a href="/profile" class="btn-profile">👤 {{ userName }}</a></li>
+                        <li><a href="#" onclick="logout()" class="btn-logout">Sair</a></li>
+                    {{/if}}
+                    
+                    {{#if !isAuthenticated}}
+                        <li><a href="/login" class="btn-primary">Login</a></li>
+                        <li><a href="/signup" class="btn-secondary">Cadastro</a></li>
+                    {{/if}}
+                </ul>
+
+                <button class="navbar-toggle" onclick="toggleMobileMenu()">☰</button>
+            </div>
+        </nav>
+
+        <!-- MENSAGENS DE SISTEMA -->
+        <div id="notifications" class="notifications"></div>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="main-content">
+            {{#if isAuthenticated}}
+                <div class="container">
+                    <div class="breadcrumb">
+                        <a href="/">Home</a> › <span id="current-page">{{ title }}</span>
+                    </div>
+                </div>
+            {{/if}}
+        </main>
+
+        <!-- RODAPÉ -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h4>Sobre</h4>
+                        <p>Plataforma enterprise de cursos com sistema completo de autenticação e gerenciamento de conteúdo.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Links Úteis</h4>
+                        <ul>
+                            <li><a href="/dictionary">Dicionário de Serviços</a></li>
+                            <li><a href="/docs">Documentação</a></li>
+                            <li><a href="/blog">Blog</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Contato</h4>
+                        <p>Email: <a href="mailto:admin@enterprise-course.com">admin@enterprise-course.com</a></p>
+                        <p>Telefone: +55 (XX) 9XXXX-XXXX</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Enterprise Course Platform. Todos os direitos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="/assets/js/utils.js"></script>
+    <script src="/assets/js/auth.js"></script>
+</body>
+</html>

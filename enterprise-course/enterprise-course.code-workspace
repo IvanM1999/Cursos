@@ -1,0 +1,79 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "Enterprise Course"
+    },
+    {
+      "path": "backend",
+      "name": "Backend (Node.js)"
+    },
+    {
+      "path": "frontend",
+      "name": "Frontend (HTML/CSS/JS)"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": false,
+    "editor.tabSize": 2,
+    "files.exclude": {
+      "node_modules": true,
+      ".env.local": true,
+      ".DS_Store": true
+    },
+    "search.exclude": {
+      "node_modules": true,
+      "dist": true
+    },
+    "files.associations": {
+      "*.html": "html"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "mongodb.mongodb-vscode",
+      "ms-mssql.mssql",
+      "eamodio.gitlens",
+      "ritwickdey.liveserver"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Iniciar Servidor (Dev)",
+        "type": "shell",
+        "command": "npm",
+        "args": ["run", "dev"],
+        "isBackground": true,
+        "problemMatcher": {
+          "pattern": {
+            "regexp": "^.*$",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*Server rodando.*",
+            "endsPattern": "^.*erro.*"
+          }
+        }
+      },
+      {
+        "label": "Instalar Dependências",
+        "type": "shell",
+        "command": "npm",
+        "args": ["install", "--legacy-peer-deps"]
+      },
+      {
+        "label": "Rodar Testes",
+        "type": "shell",
+        "command": "npm",
+        "args": ["test"]
+      }
+    ]
+  }
+}

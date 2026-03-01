@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Acesso Negado</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body class="error-page">
+    <div id="app">
+        <nav class="navbar">
+            <div class="container">
+                <a href="/" class="navbar-logo">Enterprise Course</a>
+            </div>
+        </nav>
+
+        <main class="main-content container" style="text-align: center; padding: 4rem 1rem;">
+            <h1 style="font-size: 3rem; color: var(--color-danger); margin: 2rem 0;">403</h1>
+            <h2>Acesso Negado</h2>
+            <p style="font-size: 1.1rem; color: var(--color-text-secondary); margin: 1rem 0;">
+                {{message}}
+            </p>
+            <p style="margin: 2rem 0;">
+                Você não tem permissão para acessar esta área. Se acredita que está recebendo esta mensagem por erro, 
+                entre em contato com o administrador.
+            </p>
+            <a href="/" class="btn btn-primary" style="margin-top: 2rem;">Voltar ao Início</a>
+        </main>
+    </div>
+</body>
+</html>

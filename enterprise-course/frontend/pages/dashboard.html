@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Enterprise Course</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="/" class="logo"><span>Enterprise Course</span></a>
+                </div>
+
+                <ul class="navbar-menu">
+                    <li><a href="/" class="active">Home</a></li>
+                    <li><a href="/blog">Blogs</a></li>
+                    <li><a href="/dictionary">Dicionário</a></li>
+                    <li><a href="/docs">Documentação</a></li>
+                    
+                    {{#if isAuthenticated}}
+                        <li class="nav-divider"></li>
+                        <li><a href="/profile" class="btn-profile">👤 {{ userName }}</a></li>
+                        <li><a href="/blog/create" class="btn-secondary">+ Novo Blog</a></li>
+                        <li><a href="#" onclick="logout()" class="btn-logout">Sair</a></li>
+                    {{/if}}
+                    
+                    {{#if !isAuthenticated}}
+                        <li><a href="/login" class="btn-primary">Login</a></li>
+                        <li><a href="/signup" class="btn-secondary">Cadastro</a></li>
+                    {{/if}}
+                </ul>
+
+                <button class="navbar-toggle" onclick="toggleMobileMenu()">☰</button>
+            </div>
+        </nav>
+
+        <!-- HERO SECTION -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Bem-vindo à Enterprise Course</h1>
+                    <p>Plataforma completa para aprendizado e gerenciamento de conteúdo</p>
+                    
+                    {{#if !isAuthenticated}}
+                        <div class="hero-buttons">
+                            <a href="/signup" class="btn btn-primary btn-lg">Começar Agora</a>
+                            <a href="/login" class="btn btn-outline btn-lg">Fazer Login</a>
+                        </div>
+                    {{/if}}
+
+                    {{#if isAuthenticated}}
+                        <div class="hero-buttons">
+                            <a href="/blog/create" class="btn btn-primary btn-lg">Criar Blog</a>
+                            <a href="/blog" class="btn btn-outline btn-lg">Explorar Blogs</a>
+                        </div>
+                    {{/if}}
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES SECTION -->
+        <section class="features">
+            <div class="container">
+                <h2>Recursos Principais</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔐</div>
+                        <h3>Autenticação Segura</h3>
+                        <p>Sistema de login e cadastro com criptografia JWT e bcrypt</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3>Editor de Blogs</h3>
+                        <p>Crie e edite blogs com suporte a Markdown</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📚</div>
+                        <h3>Dicionário de Serviços</h3>
+                        <p>Documentação completa de todas as APIs disponíveis</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💡</div>
+                        <h3>Guia de Dev</h3>
+                        <p>Documentação técnica para desenvolvedores</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Enterprise Ready</h3>
+                        <p>Arquitetura escalável e pronta para produção</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🗄️</div>
+                        <h3>Multi-BD</h3>
+                        <p>Suporte para MongoDB e PostgreSQL</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RODAPÉ -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h4>Sobre</h4>
+                        <p>Plataforma enterprise de cursos com sistema completo de autenticação e gerenciamento de conteúdo.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Links Úteis</h4>
+                        <ul>
+                            <li><a href="/dictionary">Dicionário de Serviços</a></li>
+                            <li><a href="/docs">Documentação</a></li>
+                            <li><a href="/blog">Blog</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Contato</h4>
+                        <p>Email: <a href="mailto:admin@enterprise-course.com">admin@enterprise-course.com</a></p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Enterprise Course Platform. Todos os direitos reservados.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+    <script src="/assets/js/auth.js"></script>
+</body>
+</html>

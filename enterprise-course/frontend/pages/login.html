@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <!-- 📍 Meta Tags Essenciais -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Faça login na plataforma Enterprise Course">
+    
+    <title>Login - Enterprise Course</title>
+    
+    <!-- 🎨 Carregamento de Estilos CSS
+         📍 Ordem de carregamento importante para cascata CSS funcionar
+    -->
+    <link rel="stylesheet" href="/assets/css/style.css" media="screen">
+    <link rel="stylesheet" href="/assets/css/responsive.css" media="screen">
+</head>
+<body class="auth-page login-page">
+    <div id="app">
+        <!-- NAVBAR SIMPLES PARA LOGIN -->
+        <nav class="navbar navbar-simple">
+            <div class="container">
+                <a href="/" class="logo">
+                    <span>Enterprise Course</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- FORM LOGIN -->
+        <main class="auth-container">
+            <div class="auth-form">
+                <h1>Fazer Login</h1>
+                <p class="subtitle">Acesse sua conta para continuar</p>
+
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="seu@email.com" 
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Senha</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="••••••••" 
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Lembrar-me</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Entrar
+                    </button>
+
+                    <div class="divider">ou</div>
+
+                    <button type="button" class="btn btn-social btn-block google">
+                        🔵 Fazer login com Google
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        Não tem uma conta? 
+                        <a href="/signup">Criar conta</a>
+                    </p>
+                    <p>
+                        Esqueceu a senha? 
+                        <a href="#">Recuperar senha</a>
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <!-- RODAPÉ -->
+        <footer class="footer footer-simple">
+            <p>&copy; 2024 Enterprise Course Platform</p>
+        </footer>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+    <script src="/assets/js/auth.js"></script>
+    <script>
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Armazenar token se retornado
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                    }
+                    
+                    showNotification('Login realizado com sucesso!', 'success');
+                    
+                    // Redirecionar após 1 segundo
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    showNotification(data.message || 'Erro ao fazer login', 'error');
+                }
+            } catch (error) {
+                showNotification('Erro ao conectar ao servidor', 'error');
+                console.error('Login error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

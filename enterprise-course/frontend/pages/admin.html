@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <!-- 📍 Meta Tags Essenciais -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Painel de Controle de Acessos - Enterprise Course Admin">
+    
+    <title>Admin Dashboard - Enterprise Course</title>
+    
+    <!-- 🎨 Carregamento de Estilos CSS -->
+    <link rel="stylesheet" href="/assets/css/style.css" media="screen">
+    <link rel="stylesheet" href="/assets/css/responsive.css" media="screen">
+    
+    <style>
+        /* 📍 Estilos adicionais para admin dashboard */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .admin-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .admin-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .admin-card h3 {
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--color-primary);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--color-text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid var(--color-border);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .admin-tabs .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .admin-tabs .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th {
+            background: var(--color-primary);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .data-table tr:hover {
+            background: var(--color-background);
+        }
+
+        .alert-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .alert-badge.high {
+            background: #ff4444;
+            color: white;
+        }
+
+        .alert-badge.medium {
+            background: #ff9800;
+            color: white;
+        }
+
+        .alert-badge.low {
+            background: #4caf50;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--color-text-secondary);
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            margin: 1rem 0;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="admin-page">
+    <div id="app">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <a href="/" class="navbar-logo">
+                    <span>Enterprise Course</span>
+                </a>
+                <div class="navbar-menu">
+                    <a href="/" class="nav-link">Home</a>
+                    <button class="btn btn-secondary" id="logoutBtn">Sair</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ADMIN DASHBOARD -->
+        <main class="main-content container">
+            <!-- 📍 Cabeçalho -->
+            <div style="margin: 2rem 0;">
+                <h1>⚙️ Painel de Controle Administrativo</h1>
+                <p style="color: var(--color-text-secondary);">Controle de Acessos, Chaves e Fluxos de Dados</p>
+            </div>
+
+            <!-- 📊 Estatísticas Principais -->
+            <div class="admin-grid" id="statsContainer">
+                <div class="admin-card">
+                    <h3>Sessões Ativas</h3>
+                    <div class="stat-value" id="activeSessions">0</div>
+                    <div class="stat-label">Usuários conectados</div>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Usuários Bloqueados</h3>
+                    <div class="stat-value" id="lockedUsers">0</div>
+                    <div class="stat-label">Por tentativas falhadas</div>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Alertas Ativos</h3>
+                    <div class="stat-value" id="activeAlerts">0</div>
+                    <div class="stat-label">De segurança</div>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Operações Totais</h3>
+                    <div class="stat-value" id="totalOps">0</div>
+                    <div class="stat-label">No sistema</div>
+                </div>
+            </div>
+
+            <!-- ABAS DO DASHBOARD -->
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="overview">📊 Visão Geral</button>
+                <button class="tab-btn" data-tab="access-logs">📋 Logs de Acesso</button>
+                <button class="tab-btn" data-tab="keys">🔑 Chaves do Sistema</button>
+                <button class="tab-btn" data-tab="scraper">🔍 Data Scraper</button>
+                <button class="tab-btn" data-tab="alerts">🚨 Alertas</button>
+                <button class="tab-btn" data-tab="data-flows">🔄 Fluxo de Dados</button>
+            </div>
+
+            <!-- TAB: VISÃO GERAL -->
+            <div class="tab-content active" id="overview">
+                <h2>Visão Geral do Sistema</h2>
+                <div id="overviewContent" class="loading">Carregando...</div>
+            </div>
+
+            <!-- TAB: LOGS DE ACESSO -->
+            <div class="tab-content" id="access-logs">
+                <h2>Registro de Acessos</h2>
+                <div style="margin: 1rem 0; display: flex; gap: 1rem;">
+                    <input type="number" id="logsFilterDays" value="7" min="1" max="30" style="max-width: 150px;" placeholder="Dias">
+                    <button class="btn btn-primary" onclick="loadAccessLogs()">Filtrar</button>
+                </div>
+                <div id="accessLogsContent" class="loading">Carregando...</div>
+            </div>
+
+            <!-- TAB: CHAVES -->
+            <div class="tab-content" id="keys">
+                <h2>Gerenciamento de Chaves</h2>
+                <div id="keysContent" class="loading">Carregando...</div>
+            </div>
+
+            <!-- TAB: DATA SCRAPER -->
+            <div class="tab-content" id="scraper">
+                <h2>Data Scraper - Coleta de Dados</h2>
+                <button class="btn btn-primary" onclick="runDataScraper()">🚀 Executar Scraping Completo</button>
+                <div id="scraperContent" class="loading">Carregando...</div>
+            </div>
+
+            <!-- TAB: ALERTAS -->
+            <div class="tab-content" id="alerts">
+                <h2>Alertas de Segurança</h2>
+                <div id="alertsContent" class="loading">Carregando...</div>
+            </div>
+
+            <!-- TAB: FLUXO DE DADOS -->
+            <div class="tab-content" id="data-flows">
+                <h2>Registro de Fluxo de Dados</h2>
+                <p>Rastreamento completo de todos os dados que entram e saem do sistema:</p>
+                <p style="color: var(--color-text-secondary);">Origem → Destino → Método → Usuário → Timestamp</p>
+                <div id="dataFlowsContent" class="loading">Carregando...</div>
+            </div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2026 Enterprise Course Platform - Painel Admin</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 📍 SCRIPTS DE ADMIN -->
+    <script>
+        /**
+         * 📍 FLUXO: Admin Dashboard → Carrega Dados → Exibe em UI → Atualiza Periodicamente
+         */
+
+        // Configuração da API
+        const API_URL = '/api/admin';
+
+        /**
+         * Carrega dashboard completo
+         * 📍 Para onde: GET /api/admin/dashboard → LocalStorage → Renderização
+         */
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/dashboard`);
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                const data = result.data;
+
+                // Atualiza estatísticas
+                document.getElementById('activeSessions').textContent = data.active_sessions;
+                document.getElementById('lockedUsers').textContent = data.locked_users;
+                document.getElementById('activeAlerts').textContent = data.active_alerts;
+                document.getElementById('totalOps').textContent = data.statistics.access_control.total_operations;
+
+                // Renderiza visão geral
+                const overview = document.getElementById('overviewContent');
+                overview.innerHTML = `
+                    <div class="admin-card" style="grid-column: 1/-1;">
+                        <h3>Resumo do Sistema</h3>
+                        <p><strong>Sessões Ativas:</strong> ${data.active_sessions}</p>
+                        <p><strong>Usuários Bloqueados:</strong> ${data.locked_users}</p>
+                        <p><strong>Alertas Ativos:</strong> ${data.active_alerts}</p>
+                        <p><strong>Memória:</strong> ${(data.key_manager_status.total_keys)} chaves registradas</p>
+                    </div>
+                `;
+
+                console.log('✅ Dashboard carregado com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao carregar dashboard:', error);
+                document.getElementById('overviewContent').innerHTML = `
+                    <div class="error-message">Erro ao carregar dashboard: ${error.message}</div>
+                `;
+            }
+        }
+
+        /**
+         * Carrega logs de acesso
+         * 📍 Para onde: GET /api/admin/access-logs → Filtro → Tabela
+         */
+        async function loadAccessLogs() {
+            try {
+                const days = document.getElementById('logsFilterDays').value || 7;
+                const response = await fetch(`${API_URL}/access-logs?days=${days}`);
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                const data = result.data;
+                let html = `
+                    <p>Período: Últimos ${days} dias</p>
+                    <p>Total de eventos: ${data.total_events}</p>
+                    <h4>Resumo por Status</h4>
+                    <ul>
+                        <li>✅ Sucesso: ${data.by_status.success}</li>
+                        <li>❌ Falhas: ${data.by_status.failed}</li>
+                        <li>🚫 Negados: ${data.by_status.denied}</li>
+                    </ul>
+                    <h4>Eventos Recentes</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Ação</th>
+                                <th>Recurso</th>
+                                <th>Status</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.recent_events.reverse().slice(0, 20).forEach(event => {
+                    html += `
+                        <tr>
+                            <td>${event.user_id}</td>
+                            <td>${event.action}</td>
+                            <td>${event.resource}</td>
+                            <td><span class="alert-badge ${event.status === 'success' ? 'low' : 'high'}">${event.status}</span></td>
+                            <td>${new Date(event.timestamp).toLocaleString('pt-BR')}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('accessLogsContent').innerHTML = html;
+            } catch (error) {
+                console.error('❌ Erro ao carregar logs:', error);
+                document.getElementById('accessLogsContent').innerHTML = `
+                    <div class="error-message">Erro ao carregar logs: ${error.message}</div>
+                `;
+            }
+        }
+
+        /**
+         * Carrega chaves do sistema
+         * 📍 Para onde: GET /api/admin/keys → Metadata (sem valores) → Tabela
+         */
+        async function loadKeys() {
+            try {
+                const response = await fetch(`${API_URL}/keys`);
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                const keys = result.data;
+                let html = `
+                    <p>Total de chaves registradas: ${keys.length}</p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>Sensível</th>
+                                <th>Expirada</th>
+                                <th>Acessos</th>
+                                <th>Último Acesso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                keys.forEach(key => {
+                    const lastAccess = key.last_accessed ? new Date(key.last_accessed).toLocaleString('pt-BR') : 'Nunca';
+                    html += `
+                        <tr>
+                            <td>${key.name}</td>
+                            <td>${key.type}</td>
+                            <td>${key.sensitive ? '🔒 Sim' : '🔓 Não'}</td>
+                            <td>${key.is_expired ? '❌ Sim' : '✅ Não'}</td>
+                            <td>${key.access_count}</td>
+                            <td>${lastAccess}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('keysContent').innerHTML = html;
+            } catch (error) {
+                console.error('❌ Erro ao carregar chaves:', error);
+                document.getElementById('keysContent').innerHTML = `
+                    <div class="error-message">Erro ao carregar chaves: ${error.message}</div>
+                `;
+            }
+        }
+
+        /**
+         * Executa data scraper
+         * 📍 Para onde: POST /api/admin/data-scraper/run → Scraping → Limpeza → Export
+         */
+        async function runDataScraper() {
+            try {
+                document.getElementById('scraperContent').innerHTML = '<div class="loading">Executando scraper...</div>';
+
+                const response = await fetch(`${API_URL}/data-scraper/run`, { method: 'POST' });
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                document.getElementById('scraperContent').innerHTML = `
+                    <div class="success-message">✅ Scraping concluído em ${result.duration_ms}ms</div>
+                    <h4>Dados Coletados</h4>
+                    <ul>
+                        <li>Usuários: ${result.data.users.count}</li>
+                        <li>Blogs: ${result.data.blogs.count}</li>
+                        <li>Atividades: ${result.data.activities.count}</li>
+                        <li>Pontos de Métrica: ${result.data.metrics.latest ? '1' : '0'}</li>
+                    </ul>
+                `;
+            } catch (error) {
+                console.error('❌ Erro no scraper:', error);
+                document.getElementById('scraperContent').innerHTML = `
+                    <div class="error-message">Erro ao executar scraper: ${error.message}</div>
+                `;
+            }
+        }
+
+        /**
+         * Carrega alertas
+         */
+        async function loadAlerts() {
+            try {
+                const response = await fetch(`${API_URL}/alerts`);
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                const { data } = result;
+                let html = `
+                    <p>Alertas ativos: ${result.active_alerts} de ${result.total_alerts}</p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Severidade</th>
+                                <th>Status</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.forEach(alert => {
+                    html += `
+                        <tr>
+                            <td>${alert.type}</td>
+                            <td><span class="alert-badge ${alert.severity}">${alert.severity}</span></td>
+                            <td>${alert.status}</td>
+                            <td>${new Date(alert.timestamp).toLocaleString('pt-BR')}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('alertsContent').innerHTML = html;
+            } catch (error) {
+                console.error('❌ Erro ao carregar alertas:', error);
+                document.getElementById('alertsContent').innerHTML = `
+                    <div class="error-message">Erro ao carregar alertas: ${error.message}</div>
+                `;
+            }
+        }
+
+        /**
+         * Carrega fluxo de dados
+         */
+        async function loadDataFlows() {
+            try {
+                const response = await fetch(`${API_URL}/data-flows`);
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                const { data } = result;
+                let html = `
+                    <p>Total de fluxos: ${data.total_records}</p>
+                    <h4>Resumo</h4>
+                    <ul>
+                        <li>Acessos a Chaves: ${data.summary.key_accesses}</li>
+                        <li>Eventos de Auditoria: ${data.summary.audit_events}</li>
+                        <li>Fluxos de Dados: ${data.summary.data_flows}</li>
+                    </ul>
+                    <h4>Registros Recentes</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Dados</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                data.records.slice(-20).reverse().forEach(record => {
+                    html += `
+                        <tr>
+                            <td>${record.type}</td>
+                            <td>${JSON.stringify(record.data || record).substring(0, 50)}...</td>
+                            <td>${new Date(record.timestamp).toLocaleString('pt-BR')}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('dataFlowsContent').innerHTML = html;
+            } catch (error) {
+                console.error('❌ Erro ao carregar fluxos:', error);
+                document.getElementById('dataFlowsContent').innerHTML = `
+                    <div class="error-message">Erro ao carregar fluxos: ${error.message}</div>
+                `;
+            }
+        }
+
+        /**
+         * 🔄 Sistema de abas
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carrega dashboard inicial
+            loadDashboard();
+            loadAccessLogs();
+            loadKeys();
+            loadAlerts();
+            loadDataFlows();
+
+            // Listeners de abas
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabName = btn.getAttribute('data-tab');
+
+                    // Remove seleção anterior
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                    // Ativa nova aba
+                    btn.classList.add('active');
+                    document.getElementById(tabName).classList.add('active');
+                });
+            });
+
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login';
+            });
+
+            // Auto-refresh a cada 30 segundos
+            setInterval(() => {
+                loadDashboard();
+                loadAccessLogs();
+                loadAlerts();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

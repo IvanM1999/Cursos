@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dicionário de Serviços - Enterprise Course</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="/" class="logo">
+                        <span>Enterprise Course</span>
+                    </a>
+                </div>
+
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog">Blogs</a></li>
+                    <li><a href="/dictionary" class="active">Dicionário</a></li>
+                    <li><a href="/docs">Documentação</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- HEADER SECTION -->
+        <section class="page-header">
+            <div class="container">
+                <h1>Dicionário de Serviços</h1>
+                <p>Documentação completa de todas as APIs disponíveis</p>
+            </div>
+        </section>
+
+        <!-- SEARCH SECTION -->
+        <main class="container">
+            <div class="dictionary-search">
+                <input 
+                    type="text" 
+                    id="searchDictionary" 
+                    placeholder="Buscar serviço..." 
+                    onkeyup="searchServices()"
+                    class="search-input search-large"
+                >
+            </div>
+
+            <!-- SERVICES LIST -->
+            <div id="servicesList" class="services-grid">
+                <div class="loading">Carregando serviços...</div>
+            </div>
+        </main>
+
+        <!-- RODAPÉ -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2024 Enterprise Course Platform</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+    <script>
+        let allServices = [];
+
+        document.addEventListener('DOMContentLoaded', loadServices);
+
+        async function loadServices() {
+            try {
+                const response = await fetch('/api/dictionary');
+                const data = await response.json();
+
+                if (data.success) {
+                    allServices = data.data;
+                    renderServices(allServices);
+                } else {
+                    showNotification('Erro ao carregar serviços', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading services:', error);
+                showNotification('Erro ao conectar ao servidor', 'error');
+            }
+        }
+
+        function renderServices(services) {
+            const servicesList = document.getElementById('servicesList');
+
+            if (services.length === 0) {
+                servicesList.innerHTML = '<p class="no-results">Nenhum serviço encontrado</p>';
+                return;
+            }
+
+            servicesList.innerHTML = services.map(service => `
+                <div class="service-card">
+                    <div class="service-header">
+                        <h3>${service.name}</h3>
+                        <span class="service-status status-${service.status}">${service.status}</span>
+                    </div>
+                    <p class="service-description">${service.description}</p>
+                    <div class="service-endpoints">
+                        <h4>Endpoints:</h4>
+                        <ul>
+                            ${service.endpoints.map(ep => `
+                                <li>
+                                    <span class="method method-${ep.method.toLowerCase()}">${ep.method}</span>
+                                    <code>${ep.path}</code>
+                                    <p>${ep.description}</p>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function searchServices() {
+            const query = document.getElementById('searchDictionary').value.toLowerCase();
+
+            const filtered = allServices.filter(service => {
+                return service.name.toLowerCase().includes(query) ||
+                       service.description.toLowerCase().includes(query) ||
+                       service.endpoints.some(ep => 
+                           ep.path.toLowerCase().includes(query) ||
+                           ep.description.toLowerCase().includes(query)
+                       );
+            });
+
+            renderServices(filtered);
+        }
+    </script>
+</body>
+</html>

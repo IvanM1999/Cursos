@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Blog - Enterprise Course</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="/" class="logo">
+                        <span>Enterprise Course</span>
+                    </a>
+                </div>
+
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog">Blogs</a></li>
+                    <li><a href="/dictionary">Dicionário</a></li>
+                    <li><a href="/docs">Documentação</a></li>
+                    <li><a href="#" onclick="logout()" class="btn-logout">Sair</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- HEADER SECTION -->
+        <section class="page-header">
+            <div class="container">
+                <h1>Criar Novo Blog</h1>
+            </div>
+        </section>
+
+        <!-- EDITOR FORM -->
+        <main class="container">
+            <div class="editor-container">
+                <form id="blogForm" onsubmit="handleBlogSubmit(event)">
+                    <div class="form-group">
+                        <label for="title">Título</label>
+                        <input 
+                            type="text" 
+                            id="title" 
+                            name="title" 
+                            placeholder="Título do seu blog"
+                            maxlength="200"
+                            required
+                        >
+                        <small>Máximo 200 caracteres</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="category">Categoria</label>
+                            <select id="category" name="category" required>
+                                <option value="">Selecione uma categoria</option>
+                                <option value="técnica">Técnica</option>
+                                <option value="tutorial">Tutorial</option>
+                                <option value="noticia">Notícia</option>
+                                <option value="opinião">Opinião</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tags">Tags (separadas por vírgula)</label>
+                            <input 
+                                type="text" 
+                                id="tags" 
+                                name="tags" 
+                                placeholder="nodejs, javascript, tutorial"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content">Conteúdo (Markdown)</label>
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('**', '**', 'texto em negrito')">
+                                <strong>B</strong>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('*', '*', 'texto em itálico')">
+                                <em>I</em>
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('# ', '', 'Título')">
+                                H1
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('- ', '', 'item da lista')">
+                                • Lista
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('[', '](url)', 'link')">
+                                🔗 Link
+                            </button>
+                            <button type="button" class="toolbar-btn" onclick="insertMarkdown('```\n', '\n```', 'seu código aqui')">
+                                &lt;&gt; Código
+                            </button>
+                        </div>
+                        <textarea 
+                            id="content" 
+                            name="content" 
+                            placeholder="Escreva seu conteúdo em Markdown..."
+                            rows="15"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="editor-preview">
+                        <h4>Preview</h4>
+                        <div id="preview" class="preview-content"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            Publicar Blog
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="saveDraft()">
+                            Salvar Rascunho
+                        </button>
+                        <a href="/blog" class="btn btn-outline">
+                            Voltar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- RODAPÉ -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2024 Enterprise Course Platform</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+    <script src="/assets/js/markdown-preview.js"></script>
+    <script>
+        // Atualizar preview quando digita
+        document.getElementById('content').addEventListener('input', updatePreview);
+
+        function insertMarkdown(before, after, placeholder) {
+            const textarea = document.getElementById('content');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selectedText = text.substring(start, end) || placeholder;
+            
+            const newText = text.substring(0, start) + before + selectedText + after + text.substring(end);
+            textarea.value = newText;
+            textarea.focus();
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const content = document.getElementById('content').value;
+            const preview = document.getElementById('preview');
+            
+            // Aqui você pode usar uma biblioteca como marked para converter markdown
+            // Por enquanto, vou fazer uma conversão simples
+            let html = content
+                .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+                .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+                .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>')
+                .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
+
+            preview.innerHTML = html;
+        }
+
+        async function handleBlogSubmit(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const category = document.getElementById('category').value;
+            const tagsInput = document.getElementById('tags').value;
+            const tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Publicando...';
+
+            try {
+                const response = await fetch('/api/blogs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        category,
+                        tags,
+                        status: 'published'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('Blog publicado com sucesso!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/blog';
+                    }, 1000);
+                } else {
+                    showNotification(data.message || 'Erro ao publicar blog', 'error');
+                }
+            } catch (error) {
+                showNotification('Erro ao conectar ao servidor', 'error');
+                console.error('Submit error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Publicar Blog';
+            }
+        }
+
+        function saveDraft() {
+            const formData = {
+                title: document.getElementById('title').value,
+                content: document.getElementById('content').value,
+                category: document.getElementById('category').value,
+                tags: document.getElementById('tags').value
+            };
+
+            localStorage.setItem('blog_draft', JSON.stringify(formData));
+            showNotification('Rascunho salvo localmente', 'success');
+        }
+
+        // Restaurar rascunho se existir
+        window.addEventListener('load', () => {
+            const draft = localStorage.getItem('blog_draft');
+            if (draft) {
+                const formData = JSON.parse(draft);
+                document.getElementById('title').value = formData.title || '';
+                document.getElementById('content').value = formData.content || '';
+                document.getElementById('category').value = formData.category || '';
+                document.getElementById('tags').value = formData.tags || '';
+            }
+        });
+    </script>
+</body>
+</html>

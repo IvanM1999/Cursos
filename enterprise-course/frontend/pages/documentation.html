@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação e Guia de Desenvolvimento - Enterprise Course</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="/" class="logo">
+                        <span>Enterprise Course</span>
+                    </a>
+                </div>
+
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog">Blogs</a></li>
+                    <li><a href="/dictionary">Dicionário</a></li>
+                    <li><a href="/docs" class="active">Documentação</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- HEADER SECTION -->
+        <section class="page-header">
+            <div class="container">
+                <h1>Guia de Desenvolvimento</h1>
+                <p>Documentação técnica completa para desenvolvedores</p>
+            </div>
+        </section>
+
+        <!-- DOCUMENTATION CONTENT -->
+        <main class="container">
+            <div class="docs-container">
+                <!-- SIDEBAR NAV -->
+                <aside class="docs-sidebar">
+                    <nav class="docs-nav">
+                        <h4>Índice</h4>
+                        <ul>
+                            <li><a href="#introducao">Introdução</a></li>
+                            <li><a href="#arquitetura">Arquitetura</a></li>
+                            <li><a href="#setup">Setup</a></li>
+                            <li><a href="#autenticacao">Autenticação</a></li>
+                            <li><a href="#apis">APIs</a></li>
+                            <li><a href="#banco-dados">Banco de Dados</a></li>
+                            <li><a href="#seguranca">Segurança</a></li>
+                            <li><a href="#deployment">Deployment</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <!-- MAIN DOCS CONTENT -->
+                <div class="docs-content">
+                    <div class="doc-section" id="introducao">
+                        <h2>Introdução</h2>
+                        <p>Enterprise Course é uma plataforma completa para gerenciamento de cursos e conteúdo, construída com Node.js, Express e suporte para MongoDB e PostgreSQL.</p>
+                        <h3>Características</h3>
+                        <ul>
+                            <li>Autenticação JWT e sessões</li>
+                            <li>CRUD de blogs com editor Markdown</li>
+                            <li>Dicionário de serviços/APIs</li>
+                            <li>Sistema de usuários</li>
+                            <li>Escalável e modular</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section" id="arquitetura">
+                        <h2>Arquitetura</h2>
+                        <p>A aplicação segue uma arquitetura em camadas:</p>
+                        <ul>
+                            <li><strong>Core:</strong> Núcleo com gerencimento de conexões</li>
+                            <li><strong>Brain:</strong> Lógica de negócios</li>
+                            <li><strong>Routes:</strong> Rotas da API</li>
+                            <li><strong>Middleware:</strong> Middlewares de autenticação e validação</li>
+                            <li><strong>Frontend:</strong> Interface com HTML e JavaScript</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section" id="setup">
+                        <h2>Setup Inicial</h2>
+                        <pre><code># Instalar dependências
+npm install
+
+# Copiar variáveis de ambiente
+cp .env.example .env
+
+# Editar .env com suas configurações
+
+# Iniciar em desenvolvimento
+npm run dev
+
+# Iniciar em produção
+npm start</code></pre>
+                    </div>
+
+                    <div class="doc-section" id="autenticacao">
+                        <h2>Autenticação</h2>
+                        <h3>JWT</h3>
+                        <p>Para requisições API, inclua o token JWT no header:</p>
+                        <pre><code>Authorization: Bearer seu_token_aqui</code></pre>
+                        <h3>Sessão</h3>
+                        <p>As páginas HTML usam sessão de servidor para autenticação.</p>
+                    </div>
+
+                    <div class="doc-section" id="apis">
+                        <h2>APIs Disponíveis</h2>
+                        <h3>Autenticação</h3>
+                        <ul>
+                            <li><code>POST /api/auth/signup</code> - Criar conta</li>
+                            <li><code>POST /api/auth/login</code> - Fazer login</li>
+                            <li><code>POST /api/auth/logout</code> - Fazer logout</li>
+                        </ul>
+                        <h3>Blogs</h3>
+                        <ul>
+                            <li><code>GET /api/blogs</code> - Listar blogs</li>
+                            <li><code>POST /api/blogs</code> - Criar blog</li>
+                            <li><code>PUT /api/blogs/:id</code> - Atualizar blog</li>
+                            <li><code>DELETE /api/blogs/:id</code> - Deletar blog</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section" id="banco-dados">
+                        <h2>Banco de Dados</h2>
+                        <p>O projeto suporta MongoDB e PostgreSQL. Configure em <code>.env</code>:</p>
+                        <h3>MongoDB</h3>
+                        <pre><code>MONGODB_URI=mongodb://localhost:27017/enterprise_course</code></pre>
+                        <h3>PostgreSQL</h3>
+                        <pre><code>DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=enterprise_course
+DB_USER=postgres
+DB_PASSWORD=sua_senha</code></pre>
+                    </div>
+
+                    <div class="doc-section" id="seguranca">
+                        <h2>Segurança</h2>
+                        <ul>
+                            <li>Senhas hasheadas com bcrypt</li>
+                            <li>CORS configurado</li>
+                            <li>Helmet para headers de segurança</li>
+                            <li>Validação de entrada</li>
+                            <li>JWT com expiração</li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section" id="deployment">
+                        <h2>Deployment</h2>
+                        <h3>Heroku</h3>
+                        <pre><code>git push heroku main</code></pre>
+                        <h3>Docker</h3>
+                        <pre><code>docker build -t enterprise-course .
+docker run -p 3000:3000 enterprise-course</code></pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- RODAPÉ -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2024 Enterprise Course Platform</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+</body>
+</html>

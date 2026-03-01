@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Enterprise Course</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="/" class="logo">
+                        <span>Enterprise Course</span>
+                    </a>
+                </div>
+
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog">Blogs</a></li>
+                    <li><a href="/dictionary">Dicionário</a></li>
+                    <li><a href="#" onclick="logout()" class="btn-logout">Sair</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- HEADER SECTION -->
+        <section class="page-header">
+            <div class="container">
+                <h1>Meu Perfil</h1>
+            </div>
+        </section>
+
+        <!-- PROFILE CONTENT -->
+        <main class="container">
+            <div class="profile-container">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-info">
+                            <h2 id="profileName">{{ userName }}</h2>
+                            <p id="profileEmail"></p>
+                            <p class="profile-joined">Membro desde <span id="profileDate"></span></p>
+                        </div>
+                    </div>
+
+                    <div class="profile-tabs">
+                        <button class="tab-btn active" onclick="switchTab('info')">Informações</button>
+                        <button class="tab-btn" onclick="switchTab('blogs')">Meus Blogs</button>
+                        <button class="tab-btn" onclick="switchTab('settings')">Configurações</button>
+                    </div>
+
+                    <!-- TAB: INFO -->
+                    <div id="info-tab" class="tab-content active">
+                        <form id="profileForm" onsubmit="handleProfileUpdate(event)">
+                            <div class="form-group">
+                                <label for="name">Nome Completo</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                Salvar Alterações
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- TAB: BLOGS -->
+                    <div id="blogs-tab" class="tab-content">
+                        <div id="userBlogsList" class="user-blogs">
+                            <p class="loading">Carregando seus blogs...</p>
+                        </div>
+                    </div>
+
+                    <!-- TAB: SETTINGS -->
+                    <div id="settings-tab" class="tab-content">
+                        <div class="settings-section">
+                            <h3>Alterar Senha</h3>
+                            <form id="passwordForm" onsubmit="handlePasswordChange(event)">
+                                <div class="form-group">
+                                    <label for="currentPassword">Senha Atual</label>
+                                    <input type="password" id="currentPassword" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="newPassword">Nova Senha</label>
+                                    <input type="password" id="newPassword" minlength="6" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirmar Senha</label>
+                                    <input type="password" id="confirmPassword" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">
+                                    Alterar Senha
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="settings-section danger">
+                            <h3>Zona de Perigo</h3>
+                            <p>Deletar sua conta permanentemente</p>
+                            <button class="btn btn-danger" onclick="deleteAccount()">
+                                Deletar Conta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- RODAPÉ -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2024 Enterprise Course Platform</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+    <script>
+        let userData = {};
+
+        document.addEventListener('DOMContentLoaded', loadProfile);
+
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/users/profile');
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    userData = data.data;
+                    document.getElementById('profileName').textContent = userData.name;
+                    document.getElementById('profileEmail').textContent = userData.email;
+                    document.getElementById('profileDate').textContent = new Date(userData.createdAt).toLocaleDateString('pt-BR');
+                    
+                    document.getElementById('name').value = userData.name;
+                    document.getElementById('email').value = userData.email;
+                } else {
+                    showNotification('Erro ao carregar perfil', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        function switchTab(tabName) {
+            // Remover active de todos os tabs
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Ativar tab selecionado
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+
+            // Carregar dados se necessário
+            if (tabName === 'blogs') {
+                loadUserBlogs();
+            }
+        }
+
+        async function loadUserBlogs() {
+            try {
+                const response = await fetch('/api/blogs');
+                const data = await response.json();
+
+                if (data.success) {
+                    const userBlogs = data.data.filter(b => b.createdBy === userData.id);
+                    const blogsList = document.getElementById('userBlogsList');
+
+                    if (userBlogs.length === 0) {
+                        blogsList.innerHTML = '<p>Você ainda não criou nenhum blog</p>';
+                        return;
+                    }
+
+                    blogsList.innerHTML = userBlogs.map(blog => `
+                        <div class="user-blog-item">
+                            <h4>${blog.title}</h4>
+                            <p>${blog.content.substring(0, 100)}...</p>
+                            <div class="blog-actions">
+                                <a href="/blog/${blog.id}/edit" class="btn btn-sm btn-secondary">Editar</a>
+                                <span class="blog-status">${blog.status}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading user blogs:', error);
+            }
+        }
+
+        async function handleProfileUpdate(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            try {
+                const response = await fetch('/api/users/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('Perfil atualizado com sucesso!', 'success');
+                    loadProfile();
+                } else {
+                    showNotification(data.message || 'Erro ao atualizar perfil', 'error');
+                }
+            } catch (error) {
+                showNotification('Erro ao conectar ao servidor', 'error');
+                console.error('Update error:', error);
+            }
+        }
+
+        async function handlePasswordChange(event) {
+            event.preventDefault();
+
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showNotification('As senhas não correspondem', 'error');
+                return;
+            }
+
+            showNotification('Funcionalidade de alterar senha em desenvolvimento', 'info');
+        }
+
+        function deleteAccount() {
+            if (!confirm('Tem certeza que deseja deletar sua conta? Esta ação é irreversível!')) {
+                return;
+            }
+
+            showNotification('Funcionalidade de deletar conta em desenvolvimento', 'info');
+        }
+    </script>
+</body>
+</html>

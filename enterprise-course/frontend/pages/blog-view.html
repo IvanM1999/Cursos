@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand"><a href="/" class="logo"><span>Enterprise Course</span></a></div>
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog" class="active">Blogs</a></li>
+                    <li><a href="/dictionary">Dicionario</a></li>
+                    <li><a href="/docs">Documentacao</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="container" style="padding:2rem 0;">
+            <article id="blogContainer" class="card">
+                <div class="loading">Carregando blog...</div>
+            </article>
+        </main>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+    <script>
+        const blogId = '{{ blogId }}';
+        const escapeHtmlText = (text) => String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        async function loadBlog() {
+            const container = document.getElementById('blogContainer');
+            try {
+                const response = await fetch(`/api/blogs/${blogId}`);
+                const data = await response.json();
+
+                if (!data.success || !data.data) {
+                    container.innerHTML = '<p>Blog nao encontrado.</p>';
+                    return;
+                }
+
+                const blog = data.data;
+                container.innerHTML = `
+                    <h1>${escapeHtmlText(blog.title)}</h1>
+                    <p><strong>Categoria:</strong> ${escapeHtmlText(blog.category || 'geral')}</p>
+                    <p><strong>Visualizacoes:</strong> ${blog.views || 0}</p>
+                    <hr />
+                    <div>${escapeHtmlText(blog.content).replace(/\n/g, '<br>')}</div>
+                `;
+            } catch (error) {
+                container.innerHTML = '<p>Erro ao carregar blog.</p>';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadBlog);
+    </script>
+</body>
+</html>

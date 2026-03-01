@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blogs - Enterprise Course</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+</head>
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a href="/" class="logo">
+                        <span>Enterprise Course</span>
+                    </a>
+                </div>
+
+                <ul class="navbar-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog" class="active">Blogs</a></li>
+                    <li><a href="/dictionary">Dicionario</a></li>
+                    <li><a href="/docs">Documentacao</a></li>
+
+                    {{#if isAuthenticated}}
+                        <li class="nav-divider"></li>
+                        <li><a href="/blog/create" class="btn-secondary">+ Novo Blog</a></li>
+                        <li><a href="#" onclick="logout()" class="btn-logout">Sair</a></li>
+                    {{/if}}
+
+                    {{#if !isAuthenticated}}
+                        <li><a href="/login" class="btn-primary">Login</a></li>
+                    {{/if}}
+                </ul>
+            </div>
+        </nav>
+
+        <section class="page-header">
+            <div class="container">
+                <h1>Blogs</h1>
+                <p>Explore artigos e conteudos da nossa comunidade</p>
+            </div>
+        </section>
+
+        <main class="container">
+            <div class="blog-filters">
+                <input
+                    type="text"
+                    id="searchBlogs"
+                    placeholder="Buscar blogs..."
+                    onkeyup="filterBlogs()"
+                    class="search-input"
+                >
+                <select id="categoryFilter" onchange="filterBlogs()" class="filter-select">
+                    <option value="">Todas as categorias</option>
+                    <option value="tecnica">Tecnica</option>
+                    <option value="tutorial">Tutorial</option>
+                    <option value="noticia">Noticia</option>
+                    <option value="opiniao">Opiniao</option>
+                </select>
+            </div>
+
+            <div id="blogsList" class="blog-grid">
+                <div class="loading">Carregando blogs...</div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2024 Enterprise Course Platform</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/assets/js/utils.js"></script>
+    <script>
+        let allBlogs = [];
+        const escapeHtmlText = (text) => String(text || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        document.addEventListener('DOMContentLoaded', loadBlogs);
+
+        async function loadBlogs() {
+            try {
+                const response = await fetch('/api/blogs');
+                const data = await response.json();
+
+                if (data.success) {
+                    allBlogs = data.data;
+                    renderBlogs(allBlogs);
+                } else {
+                    showNotification('Erro ao carregar blogs', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading blogs:', error);
+                showNotification('Erro ao conectar ao servidor', 'error');
+            }
+        }
+
+        function renderBlogs(blogs) {
+            const blogsList = document.getElementById('blogsList');
+
+            if (blogs.length === 0) {
+                blogsList.innerHTML = '<p class="no-results">Nenhum blog encontrado</p>';
+                return;
+            }
+
+            blogsList.innerHTML = blogs.map((blog) => `
+                <article class="blog-card">
+                    <div class="blog-header">
+                        <h3><a href="#" onclick="viewBlog('${blog.id}')">${escapeHtmlText(blog.title)}</a></h3>
+                        <span class="blog-date">${new Date(blog.createdAt).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <p class="blog-excerpt">${escapeHtmlText((blog.content || '').substring(0, 150))}...</p>
+                    <div class="blog-meta">
+                        <span class="blog-category">${escapeHtmlText(blog.category)}</span>
+                        <span class="blog-views">${blog.views || 0} visualizacoes</span>
+                    </div>
+                    <a href="#" onclick="viewBlog('${blog.id}')" class="read-more">Ler mais</a>
+                </article>
+            `).join('');
+        }
+
+        function filterBlogs() {
+            const search = document.getElementById('searchBlogs').value.toLowerCase();
+            const category = document.getElementById('categoryFilter').value;
+
+            const filtered = allBlogs.filter((blog) => {
+                const title = (blog.title || '').toLowerCase();
+                const content = (blog.content || '').toLowerCase();
+                const blogCategory = (blog.category || '').toLowerCase();
+                const matchSearch = title.includes(search) || content.includes(search);
+                const matchCategory = !category || blogCategory === category;
+                return matchSearch && matchCategory;
+            });
+
+            renderBlogs(filtered);
+        }
+
+        function viewBlog(blogId) {
+            window.location.href = `/blog/${blogId}`;
+        }
+    </script>
+</body>
+</html>
