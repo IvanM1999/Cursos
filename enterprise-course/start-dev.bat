@@ -1,120 +1,191 @@
 @echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
 REM ==============================================================
-REM Enterprise Course Platform - Servidor de Desenvolvimento
-REM Modo ROBUSTO: Auto-restart, recuperação de erros, watch de arquivos
+REM Enterprise Course Platform - Local Dev Bootstrap (Windows)
+REM Flow: deps -> docker postgres -> wait -> migrate -> start app
 REM ==============================================================
 
-setlocal enabledelayedexpansion
-
-REM Diretório do projeto
 set "PROJECT_DIR=%~dp0"
 cd /d "%PROJECT_DIR%"
 
-REM Cores do console (usando modo ASCII)
 set "SUCCESS=[OK]"
 set "ERROR=[ERRO]"
 set "INFO=[INFO]"
 set "WARN=[AVISO]"
+set "DOCKER_CMD=docker"
 
-REM ====== PRÉ-REQUISITOS ======
 cls
 echo.
 echo ======================================================
-echo   ENTERPRISE COURSE PLATFORM v1.0
-echo   Servidor de Desenvolvimento - Modo Robusto
-echo   Auto-Restart ^| File Watch ^| Error Recovery
+echo   ENTERPRISE COURSE PLATFORM - LOCAL DEV BOOTSTRAP
+echo   Auto setup: Postgres (Docker) + migration + server
 echo ======================================================
 echo.
 
-REM Verifica Node.js
-echo %INFO% Verificando requisitos...
+echo %INFO% Checking Node.js...
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo %ERROR% Node.js nao esta instalado.
-    echo         Baixe em: https://nodejs.org ^(v18+^)
+    echo %ERROR% Node.js not found. Install Node.js 18+ first.
     echo.
     pause
     exit /b 1
 )
-
-echo %SUCCESS% Node.js detectado: 
+echo %SUCCESS% Node.js detected:
 node --version
-echo.
 
-REM Verifica npm
-npm --version >nul 2>&1
+echo %INFO% Checking npm...
+call npm --version >nul 2>&1
 if errorlevel 1 (
-    echo %ERROR% npm nao esta instalado.
+    echo %ERROR% npm not found.
+    echo.
     pause
     exit /b 1
 )
+echo %SUCCESS% npm detected:
+call npm --version
 
-echo %SUCCESS% npm detectado:
-npm --version
-echo.
-
-REM ====== INSTALAÇÃO DE DEPENDÊNCIAS ======
 if not exist "node_modules" (
-    echo %INFO% Instalando dependencias npm...
-    echo         Isso pode levar alguns minutos...
     echo.
+    echo %INFO% Installing dependencies...
     call npm install --legacy-peer-deps
     if errorlevel 1 (
-        echo %ERROR% Falha ao instalar dependencias.
-        echo         Verifique sua conexao com internet.
+        echo %ERROR% npm install failed.
         pause
         exit /b 1
     )
-    echo %SUCCESS% Dependencias instaladas.
-    echo.
+    echo %SUCCESS% Dependencies installed.
 )
 
-REM ====== CONFIGURAÇÃO ======
 if not exist ".env" (
-    echo %INFO% Criando arquivo .env...
-    copy .env.example .env >nul 2>&1
-    echo %SUCCESS% .env criado.
-    echo         Revise as variáveis de ambiente se necessário.
     echo.
+    echo %INFO% Creating .env from .env.example...
+    copy .env.example .env >nul 2>&1
+    if errorlevel 1 (
+        echo %ERROR% Could not create .env.
+        pause
+        exit /b 1
+    )
+    echo %SUCCESS% .env created.
 )
 
-REM ====== LIMPEZA DE PROCESSOS ANTIGOS ======
-echo %INFO% Limpando processos anteriores...
-
-REM Mata Node processes no projeto
-for /f "tokens=2" %%A in ('tasklist ^| findstr node.exe') do (
-    taskkill /PID %%A /F >nul 2>&1
+echo.
+echo %INFO% Checking Docker...
+"%DOCKER_CMD%" --version >nul 2>&1
+if errorlevel 1 (
+    if exist "C:\Program Files\Docker\Docker\resources\bin\docker.exe" (
+        set "DOCKER_CMD=C:\Program Files\Docker\Docker\resources\bin\docker.exe"
+    )
 )
 
-REM Mata processo na porta 3000
+"%DOCKER_CMD%" --version >nul 2>&1
+if errorlevel 1 (
+    echo %ERROR% Docker CLI not found.
+    echo         Install Docker Desktop and open it before running this script.
+    echo.
+    pause
+    exit /b 1
+)
+
+echo %INFO% Ensuring Docker engine is running...
+"%DOCKER_CMD%" version --format "{{.Server.Version}}" >nul 2>&1
+if errorlevel 1 (
+    echo %WARN% Docker engine is not ready. Trying to start it...
+
+    net start com.docker.service >nul 2>&1
+
+    if exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" (
+        start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+    )
+
+    set /a DOCKER_WAIT=0
+    :wait_docker
+    set /a DOCKER_WAIT+=1
+    echo %INFO% Waiting for Docker engine... attempt !DOCKER_WAIT!/60
+    timeout /t 2 >nul
+    "%DOCKER_CMD%" version --format "{{.Server.Version}}" >nul 2>&1
+    if errorlevel 1 (
+        if !DOCKER_WAIT! geq 60 (
+            echo %ERROR% Docker engine is not running.
+            echo         Open Docker Desktop and wait until status is "Engine running".
+            echo.
+            pause
+            exit /b 1
+        )
+        goto wait_docker
+    )
+)
+echo %SUCCESS% Docker engine is running.
+
+REM Local DB defaults for Docker postgres service.
+REM dotenv will not override variables already defined in process env.
+set "NODE_ENV=development"
+set "DB_HOST=localhost"
+set "DB_PORT=5432"
+set "DB_NAME=enterprise_course"
+set "DB_USER=postgres"
+set "DB_PASSWORD=postgres_password"
+
+if not "%DATABASE_URL%"=="" (
+    echo %WARN% DATABASE_URL is set in the environment. Clearing it for local DB mode.
+    set "DATABASE_URL="
+)
+
+echo %INFO% Starting PostgreSQL container (docker compose)...
+"%DOCKER_CMD%" compose up -d postgres >nul 2>&1
+if errorlevel 1 (
+    echo %ERROR% Could not start postgres via docker compose.
+    echo         Run manually: docker compose up -d postgres
+    echo.
+    pause
+    exit /b 1
+)
+
+echo %INFO% Waiting for PostgreSQL on localhost:5432...
+set /a WAIT_COUNT=0
+:wait_pg
+set /a WAIT_COUNT+=1
+powershell -NoProfile -Command "$c = New-Object Net.Sockets.TcpClient; try { $c.Connect('127.0.0.1',5432); $c.Close(); exit 0 } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+    if !WAIT_COUNT! geq 60 (
+        echo %ERROR% PostgreSQL did not become reachable within 60 seconds.
+        echo         Check Docker Desktop and run: docker compose logs postgres
+        echo.
+        pause
+        exit /b 1
+    )
+    timeout /t 1 >nul
+    goto wait_pg
+)
+echo %SUCCESS% PostgreSQL is reachable.
+
+echo %INFO% Running database migration...
+call npm run db:migrate
+if errorlevel 1 (
+    echo %ERROR% Migration failed.
+    echo         Inspect logs with: docker compose logs postgres
+    echo.
+    pause
+    exit /b 1
+)
+echo %SUCCESS% Migration completed.
+
+echo.
+echo %INFO% Releasing port 3000 (if needed)...
 for /f "tokens=5" %%P in ('netstat -ano 2^>nul ^| findstr :3000 ^| findstr LISTENING') do (
     taskkill /PID %%P /F >nul 2>&1
 )
+echo %SUCCESS% Port 3000 ready.
 
-echo %SUCCESS% Processos antigos encerrados.
 echo.
-
-REM ====== INICIALIZAÇÃO DO SERVIDOR ======
-echo %INFO% Iniciando servidor com suporte a:
-echo         + Auto-restart ao salvar arquivos
-echo         + Recuperação automática de erros
-echo         + Monitoramento em tempo real
-echo         + Watch de mudanças (15+ arquivos)
+echo %INFO% Starting robust development server...
 echo.
-
-echo %INFO% Aguarde... Servidor iniciando...
-echo.
-
-REM Inicia o servidor usando ServerBootstrap
-REM Opção 1: Via node direto (mais compatível)
 call node backend/src/utils/ServerBootstrap.js
 
-REM Se chegou aqui, servidor foi finalizado
 echo.
-echo %WARN% Servidor foi encerrado.
-echo         Pressione uma tecla para fechar a janela...
+echo %WARN% Server process has exited.
+echo        Press any key to close this window...
 pause >nul
 
 endlocal
 exit /b 0
-
