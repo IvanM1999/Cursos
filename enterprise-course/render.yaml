@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: meu-projeto-html
+    name: cursos-backend
     env: node
     plan: free
+    rootDir: backend
     buildCommand: "npm install"
-    startCommand: "node server.js"
-    autoDeploy: true
+    startCommand: "npm start"
