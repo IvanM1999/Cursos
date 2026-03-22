@@ -1,0 +1,52 @@
+<h2>Prova</h2>
+<div id="quiz"></div>
+<button onclick="enviar()">Enviar</button>
+
+<script>
+let perguntas = [];
+
+async function load() {
+  const data = await fetch('/api/exam/ID_CURSO').then(r => r.json());
+  perguntas = data.perguntas;
+
+  quiz.innerHTML = perguntas.map((p, i) => `
+    <div>
+      <p>${p.pergunta}</p>
+      ${p.opcoes.map((o, j) => `
+        <label>
+          <input type="radio" name="q${i}" value="${j}">
+          ${o}
+        </label>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+async function enviar() {
+
+  const respostas = perguntas.map((_, i) => {
+    const el = document.querySelector(`input[name=q${i}]:checked`);
+    return el ? Number(el.value) : -1;
+  });
+
+  const res = await fetch('/api/exam/ID_CURSO', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      respostas,
+      userId: 'USER_ID',
+      empresaId: 'EMPRESA_ID'
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.aprovado) {
+    alert('Aprovado! Gerando certificado...');
+  } else {
+    alert('Reprovado');
+  }
+}
+
+load();
+</script>
